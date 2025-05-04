@@ -47,3 +47,24 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# Ignore data folder (your dataset)
+data/
+
+# Ignore data folder (your dataset)
+report/
+
+# Ignore outputs and generated files
+*.csv
+*.xlsx
+*.rds
+*.sav
+
+# Ignore temporary files
+*.tmp
+*.log
+.DS_Store
+
+# Ignore folders for results or plots
+output/
+plots/
