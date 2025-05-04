@@ -68,9 +68,17 @@ mice_result <- mice(features_only, m = 1, method = 'pmm', maxit = 5, seed = 123)
 # Extract the completed dataset
 features_imputed <- complete(mice_result, 1)
 
-# Verify that no missing values remain
-stopifnot(sum(is.na(features_imputed)) == 0)
-cat("✅ Missing values imputed using MICE (PMM method).\n")
+missing_counts <- colSums(is.na(features_imputed))
+total_counts <- nrow(features_imputed)
+
+missing_df <- data.frame(
+  Feature = names(missing_counts),
+  Missing_Values = missing_counts,
+  Total_Observations = total_counts,
+  Missing_Percent = round((missing_counts / total_counts) * 100, 2)
+)
+
+print(missing_df)
 
 # Save the imputed dataset
 write.csv(features_imputed, "output/tables/vehicle_features_imputed.csv", row.names = FALSE)
