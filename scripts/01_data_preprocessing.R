@@ -5,47 +5,29 @@
 # ------------------------------------------------------------------------------
 
 # Load libraries
-library(tidyverse)      # Data manipulation and visualization
+library(tidyverse)   # Data manipulation and visualization
 library(mice)        # Multivariate Imputation by Chained Equations
 
-# Read the dataset 
+# ----- Step 1: Load & Inspect Dataset -----
 vehicles <- read.csv("data/vehicles.csv")
-
-# View first few rows
 head(vehicles)
+str(vehicles)
 
-# Exclude class for numeric analysis
+# Exclude class column for numeric analysis
 features_only <- vehicles %>% select(-class)
 
-# Basic structure and summary
-str(vehicles)
-summary(features_only)
-
-# Convert summary to a data frame
+# ----- Step 2: Summary Statistics -----
 summary_df <- as.data.frame(do.call(cbind, lapply(features_only, summary)))
-
-# Transpose for better readability
 summary_df_t <- as.data.frame(t(summary_df))
-
-# Add column names
 colnames(summary_df_t) <- c("Min", "1st_Qu", "Median", "Mean", "3rd_Qu", "Max")
 
-# Create output folder if not exist
-dir.create("output/tables", recursive = TRUE, showWarnings = FALSE)
+# Create output folders if not exist
+dir.create("outputs/tables", recursive = TRUE, showWarnings = FALSE)
+dir.create("outputs/figures", recursive = TRUE, showWarnings = FALSE)
 
-# Write to CSV
-write.csv(summary_df_t, "output/tables/vehicle_feature_summary.csv", row.names = TRUE)
+write.csv(summary_df_t, "outputs/tables/vehicle_feature_summary.csv", row.names = TRUE)
 
-# ----- Boxplot for Outlier Detection -----
-# Create output folder if not exist
-dir.create("output/figures", recursive = TRUE, showWarnings = FALSE)
-
-# Save boxplot of all scaled features
-png("output/figures/boxplot_scaled_features.png", width = 1000, height = 600)
-boxplot(scale(features_only), las = 2, col = "orange", main = "Boxplots of Scaled Features")
-dev.off()
-
-# Check Missing Values
+# ----- Step 3: Missing Value Report -----
 missing_counts <- colSums(is.na(features_only))
 total_counts <- nrow(features_only)
 
@@ -56,30 +38,18 @@ missing_df <- data.frame(
   Missing_Percent = round((missing_counts / total_counts) * 100, 2)
 )
 
-# Save to CSV
-write.csv(missing_df, "output/tables/missing_value_report.csv", row.names = FALSE)
-
+write.csv(missing_df, "outputs/tables/missing_value_report.csv", row.names = FALSE)
 print(missing_df)
 
-# Impute using MICE (PMM)
-# Run mice on features_only (Predictive Mean Matching by default)
+# ----- Step 4: Imputation Using MICE (PMM) -----
 mice_result <- mice(features_only, m = 1, method = 'pmm', maxit = 5, seed = 123)
-
-# Extract the completed dataset
 features_imputed <- complete(mice_result, 1)
 
-missing_counts <- colSums(is.na(features_imputed))
-total_counts <- nrow(features_imputed)
+# Confirm no missing values after imputation
+stopifnot(sum(is.na(features_imputed)) == 0)
+cat("✅ Missing values imputed using MICE. No NA values remain.\n")
 
-missing_df <- data.frame(
-  Feature = names(missing_counts),
-  Missing_Values = missing_counts,
-  Total_Observations = total_counts,
-  Missing_Percent = round((missing_counts / total_counts) * 100, 2)
-)
+# Save imputed dataset
+write.csv(features_imputed, "outputs/tables/vehicle_features_imputed.csv", row.names = FALSE)
 
-print(missing_df)
-
-# Save the imputed dataset
-write.csv(features_imputed, "output/tables/vehicle_features_imputed.csv", row.names = FALSE)
-
+# ----- Step 5: Correlation Matrix -----
