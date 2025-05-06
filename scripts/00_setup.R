@@ -12,7 +12,7 @@ required_packages <- c(
   "psych",          # PCA and multivariate analysis
   "readr",          # Reading CSV files efficiently
   "conflicted",     # Handle function name conflicts explicitly
-  "mice"            # Multivariate Imputation by Chained Equations
+  "mice"           # Multivariate Imputation by Chained Equations
 )
 
 # Install any packages that are not already installed
