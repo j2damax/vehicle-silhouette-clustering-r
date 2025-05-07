@@ -71,3 +71,11 @@ dev.off()
 # Rule of thumb: retain components explaining 85-95% of cumulative variance
 retain_components <- which(cum_var_exp >= 0.95)[1]
 cat("Number of components to retain for 95% variance explained:", retain_components, "\n")
+
+# ------------------------------------------------------------------------------
+# Step 8: Save PCA Results
+# ------------------------------------------------------------------------------
+# Save PCA results to a CSV file
+pca_results_df <- as.data.frame(pca_result$x)
+pca_results_df$class <- features_final$class
+write.csv(pca_results_df, "outputs/tables/pca_results.csv", row.names = FALSE)
