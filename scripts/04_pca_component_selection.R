@@ -54,8 +54,10 @@ p_cumulative <- ggplot(pca_summary_df, aes(x = 1:nrow(pca_summary_df), y = Cumul
 ggsave("outputs/figures/pca_cumulative_variance_plot.png", p_cumulative, width = 10, height = 6, dpi = 300)
 
 # ------------------------------------------------------------------------------
-# Step 4: Bar Chart of Variance Explained per PC
+# Step 4: Bar Chart of Variance Explained per PC (Ordered by PC number)
 # ------------------------------------------------------------------------------
+pca_summary_df$PC <- factor(pca_summary_df$PC, levels = paste0("PC", 1:nrow(pca_summary_df)))
+
 p_individual <- ggplot(pca_summary_df, aes(x = PC, y = Variance_Explained)) +
   geom_col(fill = "skyblue") +
   geom_text(aes(label = percent(Variance_Explained, accuracy = 0.1)),
