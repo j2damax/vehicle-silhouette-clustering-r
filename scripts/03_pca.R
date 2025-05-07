@@ -69,8 +69,8 @@ dev.off()
 # Step 7: Interpretation - How Many PCs to Retain?
 # ------------------------------------------------------------------------------
 # Rule of thumb: retain components explaining 85-95% of cumulative variance
-retain_components <- which(cum_var_exp >= 0.95)[1]
-cat("Number of components to retain for 95% variance explained:", retain_components, "\n")
+retain_components <- which(cum_var_exp >= 0.90)[1]
+cat("Number of components to retain for 90% variance explained:", retain_components, "\n")
 
 # ------------------------------------------------------------------------------
 # Step 8: Save PCA Results
