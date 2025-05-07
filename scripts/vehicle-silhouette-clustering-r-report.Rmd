@@ -1,0 +1,66 @@
+---
+title: "vehicle-silhouette-clustering-r-report"
+output: html_document
+date: "2025-05-07"
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\## Business Value
+
+The business value of this analysis is to identify distinct groups of
+vehicles based on their characteristics, which can help in targeted
+marketing, product development, and customer segmentation.
+
+This clustering analysis helps to:
+
+-   Understand similarities between vehicle types
+-   Reduce dimensionality for better visualization
+-   Support automated classification systems based on silhouettes
+-   Enhance automotive design, safety analysis, or surveillance-based
+    vehicle categorization - Improve customer experience by tailoring
+    services to specific vehicle types
+
+\## Problem Statement:
+
+The problem is to cluster vehicles based on their features and evaluate
+the quality of the clusters using silhouette analysis.
+
+\## What is a Vehicle Silhouette:
+
+A vehicle silhouette is a two-dimensional representation of a vehicle's
+outline, which can be used to analyze its shape and features. In this
+analysis, we will use silhouette analysis to evaluate the quality of
+clusters formed by different vehicle types based on their
+characteristics.
+
+Use Case (Why We Do This)
+The silhouettes are analyzed for:
+
+Vehicle classification from surveillance images or camera feeds (security, tolling, traffic monitoring)
+
+Design and shape analysis (e.g., comparing aerodynamic features)
+
+Autonomous driving systems for object recognition and differentiation
+
+This analysis is valuable when you don’t have color, texture, or license plate data — only the shape matters.
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to
+prevent printing of the R code that generated the plot.
