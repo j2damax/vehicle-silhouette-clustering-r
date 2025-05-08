@@ -1,4 +1,0 @@
-PCA Component Selection Summary:
-Strategy Used: Cumulative Variance Threshold ≥ 90%
-Top 3 components retained.
-Cumulative variance explained: 79.48 %

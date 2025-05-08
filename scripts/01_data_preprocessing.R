@@ -7,6 +7,7 @@
 # Load libraries
 library(tidyverse)   # Data manipulation and visualization
 library(mice)        # Multivariate Imputation by Chained Equations
+library(ggplot2)    # For plotting
 
 # ----- Step 1: Load & Inspect Dataset -----
 vehicles <- read.csv("data/vehicles.csv")
@@ -59,7 +60,7 @@ write.csv(missing_df, "outputs/tables/missing_value_report.csv", row.names = FAL
 print(missing_df)
 
 # ----- Step 5: Imputation Using MICE (PMM) -----
-mice_result <- mice(features_only, m = 1, method = 'pmm', maxit = 5, seed = 123)
+mice_result <- mice(features_only, m = 5, method = 'pmm', maxit = 50, seed = 123)
 features_imputed <- complete(mice_result, 1)
 
 # Add class column back
