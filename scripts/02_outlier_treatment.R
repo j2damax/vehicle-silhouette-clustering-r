@@ -13,10 +13,6 @@ library(psych)      # Descriptive statistics
 # ------------------------------------------------------------------------------
 features_imputed <- read.csv("outputs/tables/vehicle_features_imputed.csv")
 
-# Create output folders
-dir.create("outputs/tables", recursive = TRUE, showWarnings = FALSE)
-dir.create("outputs/figures", recursive = TRUE, showWarnings = FALSE)
-
 # ------------------------------------------------------------------------------
 # Step 2: Create Summary with Outlier Stats (Before Winsorization)
 # ------------------------------------------------------------------------------
