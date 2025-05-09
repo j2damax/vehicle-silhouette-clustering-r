@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------
 # Script Name: 04_pca_component_selection.R
-# Purpose: Analyze PCA results and manually select number of components for clustering
+# Purpose: Analyze PCA results and select number of components for clustering
 # Author: Jayampathy Balasuriya
 # ------------------------------------------------------------------------------
 
@@ -23,8 +23,8 @@ cumulative_variance <- cumsum(variance_explained)
 # Create a summary data frame
 pca_summary_df <- data.frame(
   PC = paste0("PC", 1:length(variance_explained)),
-  Variance_Explained = variance_explained,
-  Cumulative_Variance = cumulative_variance
+  Variance_Explained = round(variance_explained, 4),
+  Cumulative_Variance = round(cumulative_variance, 4)
 )
 
 # Save the summary table
@@ -42,24 +42,28 @@ p_cumulative <- ggplot(pca_summary_df, aes(x = 1:nrow(pca_summary_df), y = Cumul
     x = "Number of Principal Components",
     y = "Cumulative Variance Explained"
   ) +
-  theme_light(base_size = 12)
+  theme_light()
 
 ggsave("outputs/figures/pca_cumulative_variance_plot.png", p_cumulative, width = 10, height = 6, dpi = 300)
 
 # ------------------------------------------------------------------------------
-# Step 4: Manually Select Top 2 Principal Components
+# Step 4: Apply Strategy to Select Components
 # ------------------------------------------------------------------------------
+# Manual strategy: Select top 2 components
+message("Manually selected top 2 principal components")
 top_k <- 2
-message("Manually selected top ", top_k, " components for clustering")
 
 # ------------------------------------------------------------------------------
-# Step 5: Extract and Save Top 2 Principal Components
+# Step 5: Extract and Save Top k Principal Components
 # ------------------------------------------------------------------------------
 pca_scores <- as.data.frame(pca_model$x)
-pca_top_k <- pca_scores[, 1:top_k]
 
-pca_results <- read.csv("outputs/tables/pca_results.csv")
-pca_top_k$class <- pca_results$class
+# Ensure class column is available
+pca_results_full <- read.csv("outputs/tables/pca_results.csv")
+pca_scores$class <- pca_results_full$class
+
+pca_top_k <- pca_scores[, c(1:top_k, ncol(pca_scores))]
 
 write.csv(pca_top_k, "outputs/tables/pca_top.csv", row.names = FALSE)
-cat("\u2705 Top ", top_k, " Principal Components extracted and saved for clustering.\n")
+cat("\u2705 Top Principal Components extracted and saved for clustering:", top_k, "\n")
+

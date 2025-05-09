@@ -83,7 +83,7 @@ fviz_pca_var(pca_result,
              gradient.cols = c("lightblue", "blue", "red"),
              repel = TRUE) +
   labs(title = "PCA Variable Contribution Plot") +
-  theme_minimal()
+  theme_light()
 dev.off()
 
 # ------------------------------------------------------------------------------
