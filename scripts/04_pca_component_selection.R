@@ -47,11 +47,15 @@ p_cumulative <- ggplot(pca_summary_df, aes(x = 1:nrow(pca_summary_df), y = Cumul
 ggsave("outputs/figures/pca_cumulative_variance_plot.png", p_cumulative, width = 10, height = 6, dpi = 300)
 
 # ------------------------------------------------------------------------------
-# Step 4: Apply Strategy to Select Components
+# Step 4: Select Top N PCs Based on 90% Cumulative Variance
 # ------------------------------------------------------------------------------
-# Manual strategy: Select top 2 components
-message("Manually selected top 2 principal components")
-top_k <- 2
+top_k <- 5  # Set manually based on cumulative variance reaching ~90%
+pca_scores <- as.data.frame(pca_model$x)
+pca_scores$class <- read.csv("outputs/tables/pca_results.csv")$class  # Ensure class is retained
+pca_top_k <- pca_scores[, c(1:top_k, ncol(pca_scores))]  # Include class column
+
+write.csv(pca_top_k, "outputs/tables/pca_top.csv", row.names = FALSE)
+cat("\u2705 Top ", top_k, " Principal Components (90% cumulative variance) extracted and saved for clustering.\n")
 
 # ------------------------------------------------------------------------------
 # Step 5: Extract and Save Top k Principal Components
