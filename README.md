@@ -1,35 +1,65 @@
-# Vehicle Silhouette Clustering (R)
+# 🚗 Vehicle Silhouette Clustering (R)
 
-This project is part of the MSc Data Science coursework (Module: NIB2001CEM – Data Mining). It focuses on clustering different types of vehicles based on silhouette-derived features using unsupervised machine learning techniques, specifically:
+This project is part of the **MSc Data Science** coursework under the module **NIB2001CEM – Data Mining**. The goal is to apply unsupervised machine learning techniques to group vehicles based on their silhouette-derived features using:
 
 - Principal Component Analysis (PCA)
 - K-Means Clustering
 - Agglomerative Hierarchical Clustering
 
-## 📊 Dataset
+---
 
-The dataset `vehicles.csv` contains 846 samples of vehicles with 18 numerical features extracted from their silhouettes and 1 categorical label indicating the type of vehicle.
+## 📂 Dataset
 
-## 🧪 Project Structure
+The dataset `vehicles.csv` consists of **846 samples** and **19 features**:
 
-- `data/` — Contains the original dataset.
-- `scripts/` — Step-by-step R scripts for preprocessing, dimensionality reduction, and clustering.
-- `outputs/` — Plots and tables generated during the analysis.
-- `README.md` — This file.
+- **18 numerical features** extracted using the HIPS BINATTS system (including compactness, circularity, skewness, kurtosis, etc.).
+- **1 categorical class label** identifying the vehicle type: *Double-decker bus*, *Chevrolet van*, *Opel Manta*, and *Saab*.
 
-## 📈 Key Techniques Used
+---
 
-- Missing Value and Outlier Handling
-- Data Normalization
-- Principal Component Analysis (PCA)
-- Elbow Method and Silhouette Score to identify optimal number of clusters
-- K-Means Clustering
-- Hierarchical Clustering with Dendrograms
-- Feature Projection on Principal Components
+## 🧪 Project Pipeline
 
-## 📦 Dependencies
+All R scripts are structured to reflect the logical data mining workflow:
 
-Make sure to install the following R packages:
+| Script                          | Description                                                             |
+|---------------------------------|-------------------------------------------------------------------------|
+| `00_setup.R`                    | Install and load required packages.                                     |
+| `01_data_preprocessing.R`       | Handle missing values (MICE), inspect duplicates, and generate summaries.|
+| `02_outlier_treatment.R`        | Visualize and treat outliers using Winsorization and manual strategies. |
+| `03_pca.R`                      | Perform PCA and visualize explained variance and biplots.               |
+| `04_pca_component_selection.R`  | Analyze and manually select principal components for clustering.        |
+| `05_kmeans_clustering.R`        | Perform K-Means clustering, Elbow method, Silhouette scoring.           |
+| `06_hierarchical_clustering.R`  | Apply agglomerative clustering and analyze dendrograms.                 |
+| `07_clustering_tuning.R`        | Compare cluster quality using different PC configurations.              |
+
+---
+
+## 📊 Techniques and Tools
+
+- **Missing Value Imputation:** MICE with Predictive Mean Matching (PMM)
+- **Outlier Treatment:** Winsorization (1%-99%) and median replacement
+- **Feature Scaling:** Standardization prior to PCA
+- **Dimensionality Reduction:** PCA with cumulative variance analysis
+- **Clustering Evaluation:** Elbow Plot, Silhouette Score, Confusion Matrix
+- **Visualization:** ggplot2, factoextra, ggrepel
+
+---
+
+## 📈 Outputs
+
+All plots, metrics, and intermediate data are saved under:
+
+- `outputs/tables/` — Cleaned datasets, PCA outputs, clustering summaries
+- `outputs/figures/` — Visualizations for PCA, clustering, outliers
+
+---
+
+## 📦 Required R Packages
+
+Install all required packages at once:
 
 ```r
-install.packages(c("tidyverse", "cluster", "factoextra", "ggplot2", "dendextend", "NbClust", "psych"))
+install.packages(c(
+  "tidyverse", "cluster", "factoextra", "ggplot2",
+  "dendextend", "NbClust", "psych", "mice", "ggrepel", "gridExtra"
+))

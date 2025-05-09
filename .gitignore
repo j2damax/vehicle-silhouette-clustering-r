@@ -66,5 +66,4 @@ report/
 .DS_Store
 
 # Ignore folders for results or plots
-output/
-plots/
+outputs/

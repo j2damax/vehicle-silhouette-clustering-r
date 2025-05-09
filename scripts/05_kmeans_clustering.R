@@ -1,103 +1,100 @@
 # ------------------------------------------------------------------------------
 # Script Name: 05_kmeans_clustering.R
-# Purpose: Perform K-Means clustering on PCA-reduced data and visualize results
+# Purpose: Perform K-Means clustering on PCA-reduced dataset and evaluate clusters
 # Author: Jayampathy Balasuriya
 # ------------------------------------------------------------------------------
 
 # Load libraries
 library(tidyverse)
-library(factoextra)   # Clustering visualization
-library(cluster)      # Clustering functions
-library(ggplot2)      # For plotting
-library(gridExtra)    # For combining plots
-
+library(cluster)
+library(factoextra)
+library(ggplot2)
+library(gridExtra)
+library(caret)
 
 # ------------------------------------------------------------------------------
-# Step 1: Load PCA-Reduced Data
+# Step 1: Load PCA-Reduced Data with Class
 # ------------------------------------------------------------------------------
 pca_data <- read.csv("outputs/tables/pca_top.csv")
 
-# ------------------------------------------------------------------------------
-# Step 2: Determine Optimal Number of Clusters (Elbow Method)
-# ------------------------------------------------------------------------------
-set.seed(123)
+# Separate features and class
+features <- pca_data %>% select(-class)
+class_labels <- pca_data$class
 
-wss <- map_dbl(1:10, function(k) {
-  kmeans(pca_data, centers = k, nstart = 25)$tot.withinss
+# ------------------------------------------------------------------------------
+# Step 2: Compute WSS and Determine Optimal k (Elbow Method)
+# ------------------------------------------------------------------------------
+wss <- sapply(1:10, function(k) {
+  kmeans(features, centers = k, nstart = 10)$tot.withinss
 })
 
 elbow_df <- data.frame(k = 1:10, WSS = wss)
 
+# Plot and highlight elbow point
 elbow_plot <- ggplot(elbow_df, aes(x = k, y = WSS)) +
   geom_line(color = "steelblue", size = 1.2) +
   geom_point(color = "red", size = 2) +
-  labs(title = "Elbow Method for Optimal Clusters", x = "Number of Clusters (k)", y = "Total Within-Cluster Sum of Squares") +
-  theme_minimal()
+  geom_vline(xintercept = 3, linetype = "dashed", color = "darkred") +
+  annotate("text", x = 3.3, y = max(elbow_df$WSS), label = "Elbow (k=3)",
+           hjust = 0, color = "darkred", fontface = "bold") +
+  labs(title = "Elbow Plot for K-Means Clustering",
+       subtitle = "Dashed Line: Suggested Number of Clusters (k = 3)",
+       x = "Number of Clusters (k)",
+       y = "Within-cluster Sum of Squares (WSS)") +
+  theme_light(base_size = 12)
 
 ggsave("outputs/figures/kmeans_elbow_plot.png", elbow_plot, width = 8, height = 6, dpi = 300)
 
-# ------------------------------------------------------------------------------
-# Step 3: Apply K-Means Clustering (choose optimal k, e.g., k = 4)
-# ------------------------------------------------------------------------------
-optimal_k <- 4  # Change this if elbow suggests another
-kmeans_model <- kmeans(pca_data, centers = optimal_k, nstart = 25)
-
-# Append cluster labels to data
-pca_data$Cluster <- factor(kmeans_model$cluster)
-
-# Save clustered data
-write.csv(pca_data, "outputs/tables/pca_kmeans_clusters.csv", row.names = FALSE)
-
-# ------------------------------------------------------------------------------
-# Step 4: Visualize Clusters
-# ------------------------------------------------------------------------------
-cluster_plot <- fviz_cluster(kmeans_model, data = pca_data[, 1:(ncol(pca_data)-1)],
-                             palette = "Set2", geom = "point", ellipse.type = "norm",
-                             ggtheme = theme_minimal(), main = "K-Means Clustering Result (PCA-Reduced Data)")
-
-ggsave("outputs/figures/kmeans_clusters_plot.png", cluster_plot, width = 10, height = 8, dpi = 300)
-
-# Print to viewer
+# Optional: Print elbow plot
 print(elbow_plot)
+
+# ------------------------------------------------------------------------------
+# Step 3: Apply K-Means with Optimal k (k = 3)
+# ------------------------------------------------------------------------------
+k_opt <- 3
+set.seed(42)
+kmeans_model <- kmeans(features, centers = k_opt, nstart = 25)
+
+# Add cluster labels to data
+pca_data$cluster <- factor(kmeans_model$cluster)
+
+# Save cluster assignments
+write.csv(pca_data, "outputs/tables/kmeans_clustered_data.csv", row.names = FALSE)
+
+# ------------------------------------------------------------------------------
+# Step 4: Cluster Visualization
+# ------------------------------------------------------------------------------
+cluster_plot <- fviz_cluster(kmeans_model, data = features, geom = "point",
+                             ellipse.type = "convex", palette = "jco",
+                             ggtheme = theme_minimal()) +
+  labs(title = "K-Means Clustering Result (k = 3)")
+
+ggsave("outputs/figures/kmeans_clusters_plot.png", cluster_plot, width = 8, height = 6, dpi = 300)
 print(cluster_plot)
 
 # ------------------------------------------------------------------------------
 # Step 5: Compute Silhouette Score (Internal Validation)
 # ------------------------------------------------------------------------------
-
-silhouette_score <- silhouette(kmeans_model$cluster, dist(pca_data[, 1:(ncol(pca_data)-1)]))
+silhouette_score <- silhouette(kmeans_model$cluster, dist(features))
 silhouette_avg <- mean(silhouette_score[, 3])
-cat("Average Silhouette Score: ", silhouette_avg, "\n")
 
 # Save silhouette plot
 silhouette_plot <- fviz_silhouette(silhouette_score) +
   labs(title = "Silhouette Plot for K-Means Clustering") +
   theme_minimal()
-ggsave("outputs/figures/kmeans_silhouette_plot.png", silhouette_plot, width = 8, height = 6, dpi = 300)
 
-# Print silhouette plot
+ggsave("outputs/figures/kmeans_silhouette_plot.png", silhouette_plot, width = 8, height = 6, dpi = 300)
 print(silhouette_plot)
 
+# Save silhouette score
+write.csv(data.frame(Silhouette_Score = silhouette_avg), "outputs/tables/kmeans_silhouette_score.csv", row.names = FALSE)
+
+------------------------------------------------------------------------------
+# Step 6: Confusion Matrix vs True Class (External Validation)
 # ------------------------------------------------------------------------------
-# Step 6: Alternative PC plots
+
+confusion_matrix <- table(True = class_labels, Cluster = kmeans_model$cluster)
+write.csv(confusion_matrix, "outputs/tables/kmeans_confusion_matrix.csv")
+print(confusion_matrix)
+
 # ------------------------------------------------------------------------------
-
-# 1. (PC1 vs PC3)
-alternative_plot <- ggplot(pca_data, aes(x = PC1, y = PC3, color = Cluster)) +
-  geom_point(size = 3) +
-  labs(title = "K-Means Clustering (PC1 vs PC3)", x = "Principal Component 1", y = "Principal Component 3") +
-  theme_minimal()
-ggsave("outputs/figures/kmeans_alternative_plot_pc1_vs_pc3.png", alternative_plot, width = 8, height = 6, dpi = 300)
-
-# Print alternative plot
-print(alternative_plot)
-
-# 2. (PC2 vs PC3)
-alternative_plot2 <- ggplot(pca_data, aes(x = PC2, y = PC3, color = Cluster)) +
-  geom_point(size = 3) +
-  labs(title = "K-Means Clustering (PC2 vs PC3)", x = "Principal Component 2", y = "Principal Component 3") +
-  theme_minimal()
-ggsave("outputs/figures/kmeans_alternative_plot_pc2_vs_pc3.png", alternative_plot2, width = 8, height = 6, dpi = 300)
-
-# Print alternative plot 2
-print(alternative_plot2)
