@@ -6,8 +6,9 @@
 
 # Load libraries
 library(tidyverse)
-library(factoextra)     # For PCA visualizations
-library(ggplot2)        # For plotting
+library(factoextra)   # For PCA visualizations
+library(ggplot2)      # For plotting
+library(factoextra)   # For PCA visualizations
 
 # ------------------------------------------------------------------------------
 # Step 1: Load the Cleaned Dataset
@@ -71,6 +72,19 @@ dev.off()
 # Rule of thumb: retain components explaining 85-95% of cumulative variance
 retain_components <- which(cum_var_exp >= 0.90)[1]
 cat("Number of components to retain for 90% variance explained:", retain_components, "\n")
+
+# ------------------------------------------------------------------------------
+# Step 7A: Visualize Variable Contributions (Loadings)
+# ------------------------------------------------------------------------------
+
+png("outputs/figures/pca_variable_contributions.png", width = 800, height = 600)
+fviz_pca_var(pca_result,
+             col.var = "contrib", # Color by contribution
+             gradient.cols = c("lightblue", "blue", "red"),
+             repel = TRUE) +
+  labs(title = "PCA Variable Contribution Plot") +
+  theme_minimal()
+dev.off()
 
 # ------------------------------------------------------------------------------
 # Step 8: Save PCA Results

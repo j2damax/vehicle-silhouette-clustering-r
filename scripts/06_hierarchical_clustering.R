@@ -1,76 +1,89 @@
 # ------------------------------------------------------------------------------
 # Script Name: 06_hierarchical_clustering.R
-# Purpose: Perform Agglomerative Hierarchical Clustering on PCA-reduced data
+# Purpose: Perform Hierarchical Clustering on PCA-reduced dataset and evaluate clusters
 # Author: Jayampathy Balasuriya
 # ------------------------------------------------------------------------------
 
 # Load libraries
 library(tidyverse)
-library(cluster)       # For silhouette()
-library(factoextra)    # For fviz_dend, fviz_cluster
-library(dendextend)    # For colored dendrogram
+library(cluster)
+library(factoextra)
+library(gridExtra)
+library(caret)
 
 # ------------------------------------------------------------------------------
-# Step 1: Load PCA-Reduced Data (top components)
+# Step 1: Load PCA Data
 # ------------------------------------------------------------------------------
 pca_data <- read.csv("outputs/tables/pca_top.csv")
+pca_features <- pca_data %>% select(-class)
 
 # ------------------------------------------------------------------------------
 # Step 2: Compute Distance Matrix
 # ------------------------------------------------------------------------------
-distance_matrix <- dist(pca_data, method = "euclidean")
+dist_matrix <- dist(pca_features, method = "euclidean")
 
 # ------------------------------------------------------------------------------
-# Step 3: Perform Hierarchical Clustering (Agglomerative)
+# Step 3: Hierarchical Clustering (Ward’s Method)
 # ------------------------------------------------------------------------------
-hc_model <- hclust(distance_matrix, method = "ward.D2")
+hc_model <- hclust(dist_matrix, method = "ward.D2")
 
-# Save dendrogram plot
-png("outputs/figures/hierarchical_dendrogram.png", width = 1000, height = 600)
-plot(hc_model, cex = 0.6, hang = -1, main = "Hierarchical Clustering Dendrogram")
-abline(h = 150, col = "red", lty = 2)  # Example cut height (adjust as needed)
+# Plot dendrogram
+png("outputs/figures/hierarchical_dendrogram.png", width = 900, height = 600)
+plot(hc_model, labels = FALSE, hang = -1, main = "Hierarchical Clustering Dendrogram")
+abline(h = 100, col = "red", lty = 2)  # Cut line (adjust as needed)
 dev.off()
 
 # ------------------------------------------------------------------------------
-# Step 4: Determine Number of Clusters
+# Step 4: Cut Tree to Form Clusters (k = 4)
 # ------------------------------------------------------------------------------
-# Let's assume we want 4 clusters (as with K-means)
-hc_clusters <- cutree(hc_model, k = 4)
-
-# Append to PCA data
-pca_data$cluster <- factor(hc_clusters)
+k <- 4
+clusters <- cutree(hc_model, k = k)
+pca_data$cluster <- factor(clusters)
 
 # ------------------------------------------------------------------------------
-# Step 5: Visualize Cluster Assignments (PC1 vs PC2)
+# Step 5: Visualize Cluster Assignments on PC1-PC2
 # ------------------------------------------------------------------------------
-p_hc_cluster <- fviz_cluster(list(data = pca_data[, 1:(ncol(pca_data)-1)], cluster = hc_clusters),
-                             geom = "point",
-                             ellipse.type = "convex",
-                             palette = "jco",
-                             ggtheme = theme_minimal()) +
-  labs(title = "Hierarchical Clustering (Ward.D2) on PCA-Reduced Data")
+hc_cluster_plot <- fviz_cluster(list(data = pca_features, cluster = clusters),
+                                ellipse.type = "convex", palette = "jco",
+                                ggtheme = theme_minimal(), main = "Hierarchical Clustering (PC1 vs PC2)")
 
-ggsave("outputs/figures/hierarchical_clusters_plot.png", p_hc_cluster, width = 10, height = 8, dpi = 300)
+ggsave("outputs/figures/hierarchical_clusters_plot.png", hc_cluster_plot, width = 8, height = 6, dpi = 300)
 
 # ------------------------------------------------------------------------------
-# Step 6: Silhouette Score for Hierarchical Clustering
+# Step 6: Silhouette Score Evaluation
 # ------------------------------------------------------------------------------
-silhouette_score_hc <- silhouette(hc_clusters, distance_matrix)
-silhouette_avg_hc <- mean(silhouette_score_hc[, 3])
+sil_score_hc <- silhouette(clusters, dist_matrix)
+silhouette_avg_hc <- mean(sil_score_hc[, 3])
 cat("Average Silhouette Score (Hierarchical):", silhouette_avg_hc, "\n")
 
-# Save silhouette plot
-silhouette_plot_hc <- fviz_silhouette(silhouette_score_hc) +
+silhouette_plot_hc <- fviz_silhouette(sil_score_hc) +
   labs(title = "Silhouette Plot for Hierarchical Clustering") +
-  theme_minimal()
+  theme_light()
 
 ggsave("outputs/figures/hierarchical_silhouette_plot.png", silhouette_plot_hc, width = 8, height = 6, dpi = 300)
 
-# Save silhouette score
 write.csv(data.frame(Silhouette_Score = silhouette_avg_hc), "outputs/tables/hierarchical_silhouette_score.csv", row.names = FALSE)
 
-# Save final cluster labels
-write.csv(pca_data, "outputs/tables/pca_top_with_hc_clusters.csv", row.names = FALSE)
+# ------------------------------------------------------------------------------
+# Step 7: Cluster vs Class Label Evaluation (Confusion Matrix)
+# ------------------------------------------------------------------------------
+conf_mat_hc <- table(True_Class = pca_data$class, Predicted_Cluster = pca_data$cluster)
+print(conf_mat_hc)
+write.csv(conf_mat_hc, "outputs/tables/hierarchical_confusion_matrix.csv")
 
-# Print silhouette plot
-print(silhouette_plot_hc)
+# ------------------------------------------------------------------------------
+# Step 8: Visual Comparison - True Class vs HC Clusters
+# ------------------------------------------------------------------------------
+p_class <- ggplot(pca_data, aes(x = PC1, y = PC2, color = class)) +
+  geom_point(size = 2, alpha = 0.7) +
+  labs(title = "True Class Labels", x = "PC1", y = "PC2") +
+  theme_light()
+
+p_cluster <- ggplot(pca_data, aes(x = PC1, y = PC2, color = cluster)) +
+  geom_point(size = 2, alpha = 0.7) +
+  labs(title = "Hierarchical Clustering Assignments", x = "PC1", y = "PC2") +
+  theme_light()
+
+png("outputs/figures/hierarchical_class_vs_cluster.png", width = 1000, height = 500)
+grid.arrange(p_class, p_cluster, ncol = 2)
+dev.off()
